@@ -3,7 +3,7 @@
 // הרצה ידנית לבדיקה: POST עם body {"force": true}
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+import nodemailer from "npm:nodemailer@6.9.14";
 
 const TZ = "Asia/Jerusalem";
 
@@ -83,33 +83,29 @@ Deno.serve(async (req) => {
 
   const results: Record<string, unknown> = {};
 
-  // ---- מייל דרך Gmail SMTP ----
+  // ---- מייל דרך Gmail SMTP (nodemailer) ----
   if (emails.length) {
     try {
-      const smtp = new SMTPClient({
-        connection: {
-          hostname: "smtp.gmail.com",
-          port: 465,
-          tls: true,
-          auth: {
-            username: Deno.env.get("GMAIL_SMTP_USER")!,
-            password: Deno.env.get("GMAIL_SMTP_APP_PASSWORD")!,
-          },
+      const gmailUser = Deno.env.get("GMAIL_SMTP_USER")!;
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: gmailUser,
+          pass: Deno.env.get("GMAIL_SMTP_APP_PASSWORD")!,
         },
       });
 
-      await smtp.send({
-        from: Deno.env.get("GMAIL_SMTP_USER")!,
-        to: Deno.env.get("GMAIL_SMTP_USER")!,
+      await transporter.sendMail({
+        from: `"כשרות מטבח 98" <${gmailUser}>`,
+        to: gmailUser,
         bcc: emails,
         subject: `כשרות מטבח 98 — תזכורת ברירת קטניות (${formatHebrewDate(today)})`,
-        content: textBody,
+        text: textBody,
         html: `<div dir="rtl" style="font-family:Arial,sans-serif;font-size:15px">
           <h2>תזכורת ברירת קטניות</h2>
           <pre style="font-family:inherit;white-space:pre-wrap">${textBody}</pre>
         </div>`,
       });
-      await smtp.close();
       results.email = { sent: emails.length };
     } catch (e) {
       results.email = { error: String(e) };
