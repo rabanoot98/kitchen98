@@ -127,15 +127,24 @@ export function ChipRow({
   );
 }
 
-/** בקרת כמות: מינוס / ערך / פלוס. אזור הנגיעה 44px גם כשהעיגול קטן יותר. */
+/**
+ * בקרת כמות: מינוס / ערך / פלוס. אזור הנגיעה 44px גם כשהעיגול קטן יותר.
+ * כשמועבר `onSet`, הערך האמצעי הופך לשדה שאפשר להקליד לתוכו ישירות —
+ * חיוני כשצריך לקפוץ מ-0 ל-40 ולא ללחוץ פלוס ארבעים פעם.
+ */
 export function Stepper({
   value,
   onStep,
+  onSet,
+  onCommit,
   suffix,
   boxed = false,
 }: {
   value: number | string;
   onStep: (delta: number) => void;
+  onSet?: (raw: string) => void;
+  /** נקרא ביציאה מהשדה או ב-Enter — לשמירה מושהית במקום על כל הקשה */
+  onCommit?: () => void;
   suffix?: string;
   boxed?: boolean;
 }) {
@@ -152,10 +161,33 @@ export function Stepper({
       <button type="button" onClick={() => onStep(-1)} aria-label="הפחתה" className={btn}>
         <span className={boxed ? "" : circle}>−</span>
       </button>
-      <span className="min-w-[54px] text-center text-[14.5px] font-semibold tabular-nums">
-        {value}
-        {suffix && ` ${suffix}`}
-      </span>
+
+      {onSet ? (
+        <input
+          type="number"
+          step="any"
+          min="0"
+          inputMode="decimal"
+          aria-label="כמות"
+          value={value}
+          onChange={(e) => onSet(e.target.value)}
+          onFocus={(e) => e.target.select()}
+          onBlur={onCommit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              e.currentTarget.blur();
+            }
+          }}
+          className="min-w-0 flex-1 w-[54px] bg-transparent !text-center text-[14.5px] font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-brand/30 rounded-md"
+        />
+      ) : (
+        <span className="min-w-[54px] text-center text-[14.5px] font-semibold tabular-nums">
+          {value}
+          {suffix && ` ${suffix}`}
+        </span>
+      )}
+
       <button type="button" onClick={() => onStep(1)} aria-label="הוספה" className={btn}>
         <span className={boxed ? "" : circle}>+</span>
       </button>

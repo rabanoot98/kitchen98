@@ -28,6 +28,47 @@ type Draft = {
 
 const EMPTY: Draft = { name: "", quantity: "0", unit: UNITS[0], category_id: "" };
 
+/**
+ * כמות בשורת הרשימה: אפשר להקליד ערך ישירות או להשתמש ב-± .
+ * ההקלדה מוחזקת מקומית ונשלחת ל-DB רק ביציאה מהשדה או ב-Enter,
+ * כדי לא לירות בקשת update על כל תו.
+ */
+function QuantityCell({
+  product,
+  onCommit,
+}: {
+  product: Product;
+  onCommit: (next: number) => void;
+}) {
+  const [text, setText] = useState(String(product.quantity));
+
+  // הערך מהשרת מנצח כשהוא משתנה מבחוץ (טעינה מחדש, לחיצת ±)
+  const [lastSeen, setLastSeen] = useState(product.quantity);
+  if (product.quantity !== lastSeen) {
+    setLastSeen(product.quantity);
+    setText(String(product.quantity));
+  }
+
+  function commit() {
+    const next = Math.max(0, Number(text));
+    if (!Number.isFinite(next)) return setText(String(product.quantity));
+    setText(String(next));
+    onCommit(next);
+  }
+
+  return (
+    <div className="flex items-center shrink-0">
+      <Stepper
+        value={text}
+        onStep={(delta) => onCommit(Math.max(0, Number(product.quantity) + delta))}
+        onSet={setText}
+        onCommit={commit}
+      />
+      <span className="text-[12.5px] text-muted min-w-12 shrink-0">{product.unit}</span>
+    </div>
+  );
+}
+
 export default function InventoryPage() {
   const supabase = createClient();
 
@@ -81,9 +122,9 @@ export default function InventoryPage() {
     load();
   }
 
-  /** שינוי כמות מהיר מהרשימה, בלי לפתוח את חלון העריכה */
-  async function adjust(p: Product, delta: number) {
-    const next = Math.max(0, Number(p.quantity) + delta);
+  /** קביעת כמות מהרשימה, בלי לפתוח את חלון העריכה */
+  async function setQuantity(p: Product, next: number) {
+    if (next === Number(p.quantity)) return;
     setProducts((prev) => prev.map((x) => (x.id === p.id ? { ...x, quantity: next } : x)));
     const { error } = await supabase.from("products").update({ quantity: next }).eq("id", p.id);
     if (error) {
@@ -183,11 +224,7 @@ export default function InventoryPage() {
                   </div>
                 </div>
 
-                <Stepper
-                  value={p.quantity}
-                  suffix={p.unit}
-                  onStep={(delta) => adjust(p, delta)}
-                />
+                <QuantityCell product={p} onCommit={(next) => setQuantity(p, next)} />
               </li>
             ))}
           </ul>
@@ -229,6 +266,7 @@ export default function InventoryPage() {
                         quantity: String(Math.max(0, (Number(draft.quantity) || 0) + delta)),
                       })
                     }
+                    onSet={(raw) => setDraft({ ...draft, quantity: raw })}
                   />
                 </div>
               </div>
