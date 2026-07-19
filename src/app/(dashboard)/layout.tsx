@@ -9,16 +9,19 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const supabase = await createClient();
+  // getSession (לא getUser) בכוונה: ה-middleware כבר אימת את המשתמש מול השרת
+  // בכל בקשה (getUser) והפנה החוצה מי שלא מחובר — כאן מספיק לקרוא מה-cookie
+  // בלי סיבוב רשת נוסף.
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
 
-  if (!user) redirect("/login");
+  if (!session) redirect("/login");
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("full_name, role")
-    .eq("id", user.id)
+    .eq("id", session.user.id)
     .single();
 
   return (
