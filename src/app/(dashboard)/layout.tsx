@@ -30,7 +30,10 @@ export default async function DashboardLayout({
         name={profile?.full_name ?? session.user.email ?? ""}
         role={(profile?.role as Role) ?? "worker"}
       />
-      <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6">{children}</main>
+      {/* pb-24 מפנה מקום לסרגל הטאבים הקבוע במובייל */}
+      <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 pb-24 sm:pb-6">
+        {children}
+      </main>
     </>
   );
 }

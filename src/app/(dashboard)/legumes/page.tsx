@@ -3,7 +3,18 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Button, Card, EmptyState, Input, Modal, PageHeader, Select } from "@/components/ui";
+import {
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  Fab,
+  Input,
+  Modal,
+  PageHeader,
+  Select,
+  SubmitButton,
+} from "@/components/ui";
 import { legumeStatus, type LegumeItem, type LegumeType } from "@/lib/types";
 
 /** תאריך מקומי בפורמט YYYY-MM-DD — לא toISOString, שמחזיר UTC ועלול להזיז יום. */
@@ -19,11 +30,11 @@ function addDays(days: number) {
   return toDateInput(d);
 }
 
-const STATUS_STYLE = {
-  expired: "bg-danger/10 text-danger",
-  today: "bg-warn/10 text-warn",
-  soon: "bg-warn/10 text-warn",
-  ok: "bg-ok/10 text-ok",
+const STATUS_TONE = {
+  expired: "bg-danger-tint text-danger",
+  today: "bg-warn-tint text-warn",
+  soon: "bg-warn-tint text-warn",
+  ok: "bg-ok-tint text-ok",
 } as const;
 
 type Draft = { id?: string; legume_type_id: string; label: string; expiry_date: string };
@@ -114,14 +125,14 @@ export default function LegumesPage() {
   return (
     <div>
       <PageHeader
-        title="מעקב ברירת קטניות"
+        title="ברירת קטניות"
         subtitle="תוקף בדיקת חרקים לכל פריט"
         action={
           <div className="flex gap-2">
             <Link href="/legumes/types">
-              <Button variant="ghost">סוגי קטניות</Button>
+              <Button variant="pill">סוגי קטניות</Button>
             </Link>
-            <Button onClick={openNew} disabled={types.length === 0}>
+            <Button onClick={openNew} disabled={types.length === 0} className="hidden sm:block">
               פריט חדש
             </Button>
           </div>
@@ -130,7 +141,7 @@ export default function LegumesPage() {
 
       {error && <p className="text-sm text-danger mb-3">{error}</p>}
 
-      <Card>
+      <Card className="!border-0 !bg-transparent sm:!border sm:!bg-surface">
         {loading ? (
           <EmptyState text="טוען…" />
         ) : items.length === 0 ? (
@@ -140,47 +151,49 @@ export default function LegumesPage() {
             {items.map((item) => {
               const status = legumeStatus(item.expiry_date);
               return (
-                <li key={item.id} className="flex items-center gap-3 p-4 flex-wrap">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium">
+                <li key={item.id} className="flex flex-col gap-2 py-4 sm:px-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-[15.5px] font-semibold min-w-0 truncate">
                       {item.legume_types?.name}
-                      {item.label && <span className="text-muted font-normal"> · {item.label}</span>}
+                      {item.label && (
+                        <span className="text-muted font-normal"> · {item.label}</span>
+                      )}
                     </p>
-                    <p className="text-xs text-muted mt-0.5">
-                      תוקף עד {new Date(item.expiry_date + "T00:00:00").toLocaleDateString("he-IL")}
-                      {status.days >= 0 && status.days > 0 && ` · עוד ${status.days} ימים`}
-                    </p>
+                    <Badge tone={STATUS_TONE[status.key]}>{status.label}</Badge>
                   </div>
 
-                  <span
-                    className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                      STATUS_STYLE[status.key]
-                    }`}
-                  >
-                    {status.label}
-                  </span>
-
-                  <Button onClick={() => recheck(item)} variant="ghost">
-                    בררתי מחדש
-                  </Button>
-
-                  <div className="flex gap-2 text-sm">
-                    <button
-                      onClick={() =>
-                        setDraft({
-                          id: item.id,
-                          legume_type_id: item.legume_type_id,
-                          label: item.label ?? "",
-                          expiry_date: item.expiry_date,
-                        })
-                      }
-                      className="text-brand"
-                    >
-                      עריכה
-                    </button>
-                    <button onClick={() => remove(item)} className="text-danger">
-                      מחיקה
-                    </button>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-[12.5px] text-muted">
+                      תוקף עד {new Date(item.expiry_date + "T00:00:00").toLocaleDateString("he-IL")}
+                      {status.days > 0 && ` · עוד ${status.days} ימים`}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => recheck(item)}
+                        className="text-[13px] font-semibold text-brand border border-border rounded-[10px] px-3.5 py-[7px]"
+                      >
+                        בררתי מחדש
+                      </button>
+                      <button
+                        onClick={() =>
+                          setDraft({
+                            id: item.id,
+                            legume_type_id: item.legume_type_id,
+                            label: item.label ?? "",
+                            expiry_date: item.expiry_date,
+                          })
+                        }
+                        className="text-[13px] text-brand min-w-11 h-11 -my-2"
+                      >
+                        עריכה
+                      </button>
+                      <button
+                        onClick={() => remove(item)}
+                        className="text-[13px] text-danger min-w-11 h-11 -my-2"
+                      >
+                        מחיקה
+                      </button>
+                    </div>
                   </div>
                 </li>
               );
@@ -188,6 +201,8 @@ export default function LegumesPage() {
           </ul>
         )}
       </Card>
+
+      {types.length > 0 && <Fab onClick={openNew} label="פריט חדש" />}
 
       <Modal
         open={!!draft}
@@ -228,13 +243,15 @@ export default function LegumesPage() {
               required
             />
 
-            <div className="flex gap-2 pt-2">
-              <Button type="submit" className="flex-1">
-                שמירה
-              </Button>
-              <Button type="button" variant="ghost" onClick={() => setDraft(null)}>
+            <div className="pt-2 space-y-2">
+              <SubmitButton>שמירה</SubmitButton>
+              <button
+                type="button"
+                onClick={() => setDraft(null)}
+                className="w-full text-center text-sm text-muted py-2"
+              >
                 ביטול
-              </Button>
+              </button>
             </div>
           </form>
         )}

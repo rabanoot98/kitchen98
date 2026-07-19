@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Button, Card, EmptyState, PageHeader, Select } from "@/components/ui";
+import { Badge, Button, Card, ChipRow, EmptyState, PageHeader } from "@/components/ui";
 import type { ActionLog } from "@/lib/types";
 
 const ACTION_LABEL: Record<ActionLog["action"], string> = {
@@ -19,13 +19,20 @@ const MODULE_LABEL: Record<ActionLog["module"], string> = {
   system: "מערכת",
 };
 
-const ACTION_STYLE: Record<ActionLog["action"], string> = {
-  create: "bg-ok/10 text-ok",
+const ACTION_TONE: Record<ActionLog["action"], string> = {
+  create: "bg-ok-tint text-ok",
   update: "bg-brand-soft text-brand",
-  delete: "bg-danger/10 text-danger",
-  recheck: "bg-warn/10 text-warn",
+  delete: "bg-danger-tint text-danger",
+  recheck: "bg-warn-tint text-warn",
   digest: "bg-background text-muted",
 };
+
+const MODULE_FILTERS = [
+  { value: "", label: "כל המודולים" },
+  { value: "inventory", label: "מלאי" },
+  { value: "legumes", label: "ברירת קטניות" },
+  { value: "system", label: "מערכת" },
+];
 
 export default function LogsPage() {
   const supabase = createClient();
@@ -81,28 +88,27 @@ export default function LogsPage() {
         title="לוג פעולות"
         subtitle="300 הפעולות האחרונות"
         action={
+          // במובייל הפעולה ההרסנית יושבת במסך "עוד", לא בראש הרשימה
           isAdmin ? (
-            <Button variant="danger" onClick={clearHistory}>
+            <Button variant="danger" onClick={clearHistory} className="hidden sm:block">
               מחיקת היסטוריה
             </Button>
           ) : undefined
         }
       />
 
-      <Select
-        value={moduleFilter}
-        onChange={(e) => setModuleFilter(e.target.value)}
-        className="!mt-0 mb-4 max-w-xs"
-      >
-        <option value="">כל המודולים</option>
-        <option value="inventory">מלאי</option>
-        <option value="legumes">ברירת קטניות</option>
-        <option value="system">מערכת</option>
-      </Select>
+      <div className="mb-3">
+        <ChipRow
+          label="סינון לפי מודול"
+          value={moduleFilter}
+          onChange={setModuleFilter}
+          options={MODULE_FILTERS}
+        />
+      </div>
 
       {error && <p className="text-sm text-danger mb-3">{error}</p>}
 
-      <Card>
+      <Card className="!border-0 !bg-transparent sm:!border sm:!bg-surface">
         {loading ? (
           <EmptyState text="טוען…" />
         ) : visible.length === 0 ? (
@@ -110,21 +116,15 @@ export default function LogsPage() {
         ) : (
           <ul className="divide-y divide-border">
             {visible.map((l) => (
-              <li key={l.id} className="flex items-center gap-3 p-4">
-                <span
-                  className={`text-xs px-2.5 py-1 rounded-full font-medium whitespace-nowrap ${
-                    ACTION_STYLE[l.action]
-                  }`}
-                >
-                  {ACTION_LABEL[l.action]}
-                </span>
+              <li key={l.id} className="flex items-center gap-2.5 py-[13px] sm:px-4">
+                <Badge tone={ACTION_TONE[l.action]}>{ACTION_LABEL[l.action]}</Badge>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm truncate">{l.entity_name ?? "—"}</p>
-                  <p className="text-xs text-muted">
+                  <p className="text-[11.5px] text-muted mt-0.5">
                     {MODULE_LABEL[l.module]} · {l.profiles?.full_name ?? "מערכת"}
                   </p>
                 </div>
-                <span className="text-xs text-muted whitespace-nowrap">
+                <span className="text-[11px] text-tab-inactive whitespace-nowrap">
                   {new Date(l.created_at).toLocaleString("he-IL", {
                     day: "2-digit",
                     month: "2-digit",

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Button, Card, EmptyState, Input, PageHeader } from "@/components/ui";
+import { BackHeader, Card, EmptyState, Input } from "@/components/ui";
 import type { Recipient } from "@/lib/types";
 
 export default function RecipientsPage() {
@@ -73,7 +73,7 @@ export default function RecipientsPage() {
   if (isAdmin === false) {
     return (
       <div>
-        <PageHeader title="נמעני התראות" />
+        <BackHeader title="נמעני התראות" href="/more" />
         <Card>
           <EmptyState text="דף זה זמין למנהלים בלבד." />
         </Card>
@@ -85,37 +85,39 @@ export default function RecipientsPage() {
   const phones = recipients.filter((r) => r.channel === "whatsapp");
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="נמעני התראות"
-        subtitle="מקבלים דיגסט יומי ב-10:00 על פריטים שפג תוקפם היום או מחר"
-      />
+    <div>
+      <BackHeader title="נמעני התראות" href="/more" />
+      <p className="text-[12.5px] text-muted mb-5 -mt-2">
+        מקבלים דיגסט יומי ב-10:00 על פריטים שפג תוקפם היום או מחר
+      </p>
 
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {error && <p className="text-sm text-danger mb-3">{error}</p>}
 
-      <ChannelSection
-        title="כתובות מייל"
-        placeholder="name@example.com"
-        type="email"
-        value={email}
-        onChange={setEmail}
-        onAdd={() => add("email", email)}
-        items={emails}
-        onRemove={remove}
-        empty="לא הוגדרו כתובות מייל"
-      />
+      <div className="space-y-6">
+        <ChannelSection
+          title="כתובות מייל"
+          placeholder="name@example.com"
+          type="email"
+          value={email}
+          onChange={setEmail}
+          onAdd={() => add("email", email)}
+          items={emails}
+          onRemove={remove}
+          empty="לא הוגדרו כתובות מייל"
+        />
 
-      <ChannelSection
-        title="מספרי וואטסאפ"
-        placeholder="+972501234567"
-        type="tel"
-        value={phone}
-        onChange={setPhone}
-        onAdd={() => add("whatsapp", phone)}
-        items={phones}
-        onRemove={remove}
-        empty="לא הוגדרו מספרי וואטסאפ"
-      />
+        <ChannelSection
+          title="מספרי וואטסאפ"
+          placeholder="+972501234567"
+          type="tel"
+          value={phone}
+          onChange={setPhone}
+          onAdd={() => add("whatsapp", phone)}
+          items={phones}
+          onRemove={remove}
+          empty="לא הוגדרו מספרי וואטסאפ"
+        />
+      </div>
     </div>
   );
 }
@@ -143,7 +145,7 @@ function ChannelSection({
 }) {
   return (
     <section>
-      <h2 className="font-bold mb-3">{title}</h2>
+      <h2 className="font-bold mb-3 text-[15px]">{title}</h2>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -157,22 +159,30 @@ function ChannelSection({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           required
-          className="!mt-0"
+          className="!mt-0 !h-11"
         />
-        <Button type="submit">הוספה</Button>
+        <button
+          type="submit"
+          className="h-11 px-5 shrink-0 rounded-[11px] bg-brand text-white text-sm font-semibold"
+        >
+          הוספה
+        </button>
       </form>
 
-      <Card>
+      <Card className="!border-0 !bg-transparent sm:!border sm:!bg-surface">
         {items.length === 0 ? (
           <EmptyState text={empty} />
         ) : (
           <ul className="divide-y divide-border">
             {items.map((r) => (
-              <li key={r.id} className="flex items-center justify-between p-4">
-                <span dir="ltr" className="text-sm">
+              <li key={r.id} className="flex items-center justify-between py-3.5 sm:px-4">
+                <span dir="ltr" className="text-[15px]">
                   {r.value}
                 </span>
-                <button onClick={() => onRemove(r)} className="text-sm text-danger">
+                <button
+                  onClick={() => onRemove(r)}
+                  className="text-[13.5px] text-danger min-w-11 h-11 -my-3"
+                >
                   הסרה
                 </button>
               </li>

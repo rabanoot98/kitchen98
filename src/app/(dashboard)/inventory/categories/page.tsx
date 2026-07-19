@@ -1,9 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Button, Card, EmptyState, Input, PageHeader } from "@/components/ui";
+import { BackHeader, Card, EmptyState, Input } from "@/components/ui";
 import type { Category } from "@/lib/types";
 
 export default function CategoriesPage() {
@@ -45,14 +44,7 @@ export default function CategoriesPage() {
 
   return (
     <div>
-      <PageHeader
-        title="ניהול קטגוריות"
-        action={
-          <Link href="/inventory">
-            <Button variant="ghost">חזרה למלאי</Button>
-          </Link>
-        }
-      />
+      <BackHeader title="ניהול קטגוריות" href="/inventory" />
 
       <form onSubmit={add} className="flex gap-2 mb-4">
         <Input
@@ -60,14 +52,19 @@ export default function CategoriesPage() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
-          className="!mt-0"
+          className="!mt-0 !h-11"
         />
-        <Button type="submit">הוספה</Button>
+        <button
+          type="submit"
+          className="h-11 px-5 shrink-0 rounded-[11px] bg-brand text-white text-sm font-semibold"
+        >
+          הוספה
+        </button>
       </form>
 
       {error && <p className="text-sm text-danger mb-3">{error}</p>}
 
-      <Card>
+      <Card className="!border-0 !bg-transparent sm:!border sm:!bg-surface">
         {loading ? (
           <EmptyState text="טוען…" />
         ) : categories.length === 0 ? (
@@ -75,9 +72,12 @@ export default function CategoriesPage() {
         ) : (
           <ul className="divide-y divide-border">
             {categories.map((c) => (
-              <li key={c.id} className="flex items-center justify-between p-4">
-                <span>{c.name}</span>
-                <button onClick={() => remove(c)} className="text-sm text-danger">
+              <li key={c.id} className="flex items-center justify-between py-3.5 sm:px-4">
+                <span className="text-[15px]">{c.name}</span>
+                <button
+                  onClick={() => remove(c)}
+                  className="text-[13.5px] text-danger min-w-11 h-11 -my-3"
+                >
                   מחיקה
                 </button>
               </li>

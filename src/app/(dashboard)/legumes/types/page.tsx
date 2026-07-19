@@ -1,9 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Button, Card, EmptyState, Input, PageHeader } from "@/components/ui";
+import { BackHeader, Card, EmptyState, Input } from "@/components/ui";
 import type { LegumeType } from "@/lib/types";
 
 export default function LegumeTypesPage() {
@@ -75,9 +74,7 @@ export default function LegumeTypesPage() {
     const { error } = await supabase.from("legume_types").delete().eq("id", t.id);
     if (error) {
       setError(
-        error.code === "23503"
-          ? "לא ניתן למחוק סוג שיש לו פריטים במעקב"
-          : error.message
+        error.code === "23503" ? "לא ניתן למחוק סוג שיש לו פריטים במעקב" : error.message
       );
       return;
     }
@@ -86,34 +83,31 @@ export default function LegumeTypesPage() {
 
   return (
     <div>
-      <PageHeader
-        title="סוגי קטניות"
-        subtitle="זמן תוקף ברירה ברירת־מחדל לכל סוג"
-        action={
-          <Link href="/legumes">
-            <Button variant="ghost">חזרה למעקב</Button>
-          </Link>
-        }
-      />
+      <BackHeader title="סוגי קטניות" href="/legumes" />
 
-      <form onSubmit={add} className="flex gap-2 mb-4 items-end">
+      <form onSubmit={add} className="flex gap-2 mb-4">
         <Input
           placeholder="שם הסוג"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
-          className="!mt-0"
+          className="!mt-0 !h-11"
         />
         <Input
           type="number"
           min="1"
-          placeholder="ימים"
+          aria-label="ימי תוקף"
           value={days}
           onChange={(e) => setDays(e.target.value)}
           required
-          className="!mt-0 w-28"
+          className="!mt-0 !h-11 !w-16 shrink-0 text-center"
         />
-        <Button type="submit">הוספה</Button>
+        <button
+          type="submit"
+          className="h-11 px-5 shrink-0 rounded-[11px] bg-brand text-white text-sm font-semibold"
+        >
+          הוספה
+        </button>
       </form>
 
       {error && <p className="text-sm text-danger mb-3">{error}</p>}
@@ -123,7 +117,7 @@ export default function LegumeTypesPage() {
         </p>
       )}
 
-      <Card>
+      <Card className="!border-0 !bg-transparent sm:!border sm:!bg-surface">
         {loading ? (
           <EmptyState text="טוען…" />
         ) : types.length === 0 ? (
@@ -131,38 +125,57 @@ export default function LegumeTypesPage() {
         ) : (
           <ul className="divide-y divide-border">
             {types.map((t) => (
-              <li key={t.id} className="flex items-center gap-3 p-4">
+              <li key={t.id} className="flex items-center gap-2 py-3.5 sm:px-4">
                 {editing?.id === t.id ? (
                   <>
                     <Input
                       value={editing.name}
                       onChange={(e) => setEditing({ ...editing, name: e.target.value })}
-                      className="!mt-0 flex-1"
+                      className="!mt-0 !h-11 flex-1"
                     />
                     <Input
                       type="number"
                       min="1"
+                      aria-label="ימי תוקף"
                       value={String(editing.default_validity_days)}
                       onChange={(e) =>
                         setEditing({ ...editing, default_validity_days: Number(e.target.value) })
                       }
-                      className="!mt-0 w-24"
+                      className="!mt-0 !h-11 !w-16 shrink-0 text-center"
                     />
-                    <Button onClick={saveEdit}>שמירה</Button>
-                    <Button variant="ghost" onClick={() => setEditing(null)}>
+                    <button
+                      onClick={saveEdit}
+                      className="h-11 px-4 shrink-0 rounded-[11px] bg-brand text-white text-sm font-semibold"
+                    >
+                      שמירה
+                    </button>
+                    <button
+                      onClick={() => setEditing(null)}
+                      className="text-[13.5px] text-muted min-w-11 h-11"
+                    >
                       ביטול
-                    </Button>
+                    </button>
                   </>
                 ) : (
                   <>
-                    <span className="flex-1 font-medium">{t.name}</span>
-                    <span className="text-sm text-muted">{t.default_validity_days} ימים</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[15px] font-semibold truncate">{t.name}</p>
+                      <p className="text-[12.5px] text-muted mt-0.5">
+                        {t.default_validity_days} ימים
+                      </p>
+                    </div>
                     {isAdmin && (
-                      <div className="flex gap-2 text-sm">
-                        <button onClick={() => setEditing(t)} className="text-brand">
+                      <div className="flex gap-1 text-[13.5px]">
+                        <button
+                          onClick={() => setEditing(t)}
+                          className="text-brand min-w-11 h-11"
+                        >
                           עריכה
                         </button>
-                        <button onClick={() => remove(t)} className="text-danger">
+                        <button
+                          onClick={() => remove(t)}
+                          className="text-danger min-w-11 h-11"
+                        >
                           מחיקה
                         </button>
                       </div>

@@ -3,7 +3,19 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Button, Card, EmptyState, Input, Modal, PageHeader, Select } from "@/components/ui";
+import {
+  Button,
+  Card,
+  ChipRow,
+  EmptyState,
+  Fab,
+  Input,
+  Modal,
+  PageHeader,
+  Select,
+  Stepper,
+  SubmitButton,
+} from "@/components/ui";
 import { UNITS, type Category, type Product } from "@/lib/types";
 
 type Draft = {
@@ -29,10 +41,7 @@ export default function InventoryPage() {
 
   const load = useCallback(async () => {
     const [p, c] = await Promise.all([
-      supabase
-        .from("products")
-        .select("*, categories(name)")
-        .order("name"),
+      supabase.from("products").select("*, categories(name)").order("name"),
       supabase.from("categories").select("id, name").order("name"),
     ]);
     if (p.error) setError(p.error.message);
@@ -84,18 +93,16 @@ export default function InventoryPage() {
   }
 
   const visible = products.filter(
-    (p) =>
-      (!filter || p.category_id === filter) &&
-      (!search || p.name.includes(search.trim()))
+    (p) => (!filter || p.category_id === filter) && (!search || p.name.includes(search.trim()))
   );
 
   return (
     <div>
       <PageHeader
-        title="ניהול מלאי מחסן"
+        title="מלאי מחסן"
         subtitle={`${products.length} מוצרים`}
         action={
-          <div className="flex gap-2">
+          <div className="hidden sm:flex gap-2">
             <Link href="/inventory/categories">
               <Button variant="ghost">קטגוריות</Button>
             </Link>
@@ -104,26 +111,44 @@ export default function InventoryPage() {
         }
       />
 
-      <div className="flex gap-3 mb-4">
+      <div className="relative mb-3">
         <Input
           placeholder="חיפוש מוצר…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="!mt-0"
+          className="!mt-0 !h-11 !bg-background pr-10"
         />
-        <Select value={filter} onChange={(e) => setFilter(e.target.value)} className="!mt-0">
-          <option value="">כל הקטגוריות</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </Select>
+        <svg
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          aria-hidden="true"
+        >
+          <circle cx="11" cy="11" r="7" />
+          <path d="m20 20-3.5-3.5" />
+        </svg>
+      </div>
+
+      <div className="mb-3">
+        <ChipRow
+          label="סינון לפי קטגוריה"
+          value={filter}
+          onChange={setFilter}
+          options={[
+            { value: "", label: "הכל" },
+            ...categories.map((c) => ({ value: c.id, label: c.name })),
+          ]}
+        />
       </div>
 
       {error && <p className="text-sm text-danger mb-3">{error}</p>}
 
-      <Card>
+      <Card className="!border-0 !bg-transparent sm:!border sm:!bg-surface">
         {loading ? (
           <EmptyState text="טוען…" />
         ) : visible.length === 0 ? (
@@ -131,56 +156,45 @@ export default function InventoryPage() {
         ) : (
           <ul className="divide-y divide-border">
             {visible.map((p) => (
-              <li key={p.id} className="flex items-center gap-3 p-4">
+              <li key={p.id} className="flex items-center gap-2 py-3.5 sm:px-4">
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{p.name}</p>
-                  <p className="text-xs text-muted">{p.categories?.name ?? "ללא קטגוריה"}</p>
+                  <p className="text-[15.5px] font-semibold truncate">{p.name}</p>
+                  <p className="text-[12.5px] text-muted mt-0.5">
+                    {p.categories?.name ?? "ללא קטגוריה"}
+                  </p>
+                  <div className="flex gap-3 text-[13px] mt-1.5">
+                    <button
+                      onClick={() =>
+                        setDraft({
+                          id: p.id,
+                          name: p.name,
+                          quantity: String(p.quantity),
+                          unit: p.unit,
+                          category_id: p.category_id ?? "",
+                        })
+                      }
+                      className="text-brand py-1.5 pl-1.5"
+                    >
+                      עריכה
+                    </button>
+                    <button onClick={() => remove(p)} className="text-danger py-1.5 px-1.5">
+                      מחיקה
+                    </button>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => adjust(p, -1)}
-                    className="w-8 h-8 rounded-lg border border-border text-lg leading-none hover:bg-background"
-                    aria-label="הפחתה"
-                  >
-                    −
-                  </button>
-                  <span className="w-24 text-center text-sm tabular-nums">
-                    {p.quantity} {p.unit}
-                  </span>
-                  <button
-                    onClick={() => adjust(p, 1)}
-                    className="w-8 h-8 rounded-lg border border-border text-lg leading-none hover:bg-background"
-                    aria-label="הוספה"
-                  >
-                    +
-                  </button>
-                </div>
-
-                <div className="flex gap-2 text-sm">
-                  <button
-                    onClick={() =>
-                      setDraft({
-                        id: p.id,
-                        name: p.name,
-                        quantity: String(p.quantity),
-                        unit: p.unit,
-                        category_id: p.category_id ?? "",
-                      })
-                    }
-                    className="text-brand"
-                  >
-                    עריכה
-                  </button>
-                  <button onClick={() => remove(p)} className="text-danger">
-                    מחיקה
-                  </button>
-                </div>
+                <Stepper
+                  value={p.quantity}
+                  suffix={p.unit}
+                  onStep={(delta) => adjust(p, delta)}
+                />
               </li>
             ))}
           </ul>
         )}
       </Card>
+
+      <Fab onClick={() => setDraft({ ...EMPTY })} label="מוצר חדש" />
 
       <Modal
         open={!!draft}
@@ -203,15 +217,21 @@ export default function InventoryPage() {
               autoFocus
             />
             <div className="grid grid-cols-2 gap-3">
-              <Input
-                label="כמות"
-                type="number"
-                step="any"
-                min="0"
-                value={draft.quantity}
-                onChange={(e) => setDraft({ ...draft, quantity: e.target.value })}
-                required
-              />
+              <div>
+                <span className="text-[12.5px] text-muted">כמות</span>
+                <div className="mt-1">
+                  <Stepper
+                    boxed
+                    value={draft.quantity}
+                    onStep={(delta) =>
+                      setDraft({
+                        ...draft,
+                        quantity: String(Math.max(0, (Number(draft.quantity) || 0) + delta)),
+                      })
+                    }
+                  />
+                </div>
+              </div>
               <Select
                 label="יחידת מידה"
                 value={draft.unit}
@@ -237,13 +257,15 @@ export default function InventoryPage() {
               ))}
             </Select>
 
-            <div className="flex gap-2 pt-2">
-              <Button type="submit" className="flex-1">
-                שמירה
-              </Button>
-              <Button type="button" variant="ghost" onClick={() => setDraft(null)}>
+            <div className="pt-2 space-y-2">
+              <SubmitButton>שמירה</SubmitButton>
+              <button
+                type="button"
+                onClick={() => setDraft(null)}
+                className="w-full text-center text-sm text-muted py-2"
+              >
                 ביטול
-              </Button>
+              </button>
             </div>
           </form>
         )}

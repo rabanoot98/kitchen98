@@ -11,6 +11,12 @@
   --danger: #b42318;
   --warn: #b54708;
   --ok: #157347;
+
+  /* גווני רקע לתגי סטטוס */
+  --danger-tint: #fdecea;
+  --warn-tint: #fdf1e2;
+  --ok-tint: #e9f6ef;
+  --tab-inactive: #9aa1ab;
 }
 
 @theme inline {
@@ -24,6 +30,10 @@
   --color-danger: var(--danger);
   --color-warn: var(--warn);
   --color-ok: var(--ok);
+  --color-danger-tint: var(--danger-tint);
+  --color-warn-tint: var(--warn-tint);
+  --color-ok-tint: var(--ok-tint);
+  --color-tab-inactive: var(--tab-inactive);
   --font-sans: var(--font-heebo);
 }
 
@@ -31,6 +41,15 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-heebo), "Segoe UI", Arial, sans-serif;
+}
+
+/* שורות צ'יפים נגללות אופקית — בלי פס גלילה גלוי */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 /* מספרים בשדות קלט נשארים LTR גם בתוך עמוד RTL */
