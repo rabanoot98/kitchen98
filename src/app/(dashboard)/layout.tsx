@@ -27,7 +27,7 @@ export default async function DashboardLayout({
   return (
     <>
       <Nav
-        name={profile?.full_name ?? user.email ?? ""}
+        name={profile?.full_name ?? session.user.email ?? ""}
         role={(profile?.role as Role) ?? "worker"}
       />
       <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6">{children}</main>
