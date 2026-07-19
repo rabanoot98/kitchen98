@@ -63,6 +63,7 @@ export default function MorePage() {
           <NavRow href="/inventory/categories" label="ניהול קטגוריות" />
           <NavRow href="/legumes/types" label="סוגי קטניות" />
           {isAdmin && <NavRow href="/settings/recipients" label="נמעני התראות" />}
+          {isAdmin && <NavRow href="/settings/users" label="ניהול הרשאות" />}
         </ul>
       </Card>
 

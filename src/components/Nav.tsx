@@ -12,6 +12,7 @@ const LINKS = [
   { href: "/legumes", label: "ברירת קטניות" },
   { href: "/logs", label: "לוג פעולות" },
   { href: "/settings/recipients", label: "נמענים", adminOnly: true },
+  { href: "/settings/users", label: "הרשאות", adminOnly: true },
 ];
 
 const TABS = [
